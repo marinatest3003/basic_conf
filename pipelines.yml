@@ -1,5 +1,5 @@
 resources:
-  - name: MyGitHubRepo
+  - name: MyGitHubRepoBasic
     type: GitRepo
     configuration:
       gitProvider: MyGitHub
@@ -40,7 +40,7 @@ pipelines:
           integrations:
             - name: MyArtifactory
           inputResources:
-            - name: MyGitHubRepo
+            - name: MyGitHubRepoBasic
 
       - name: docker_push
         type: DockerPush
