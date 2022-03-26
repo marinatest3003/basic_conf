@@ -1,0 +1,69 @@
+resources:
+  - name: MyGitHubRepo
+    type: GitRepo
+    configuration:
+      gitProvider: MyGitHub
+      path: marinatest3003/basic
+      branches:
+        include: master
+      buildOn:
+         commit: true
+  
+  - name: hello_image
+    type: Image
+    configuration:
+      registry: MyArtifactory
+      sourceRepository: local-hello   # required if registry is Artifactory
+      imageName: pe163161marinab.jfrog.io/local-hello/python
+      imageTag: latest1
+      autoPull: true #(default true)
+
+  - name: python_buildinfo
+    type: BuildInfo
+    configuration:
+      sourceArtifactory: MyArtifactory
+      buildName: python_build
+      buildNumber: 1
+            
+pipelines:
+  - name: pipeline_python
+    steps:
+      - name: docker_build
+        type: DockerBuild
+        configuration:
+          #inherits all the tags from bash; https://www.jfrog.com/confluence/display/JFROG/Bash
+          affinityGroup: python_group
+          dockerFileLocation: .
+          dockerFileName: Dockerfile
+          dockerImageName: pe163161marinab.jfrog.io/local-hello/python
+          dockerImageTag: ${run_number}
+          integrations:
+            - name: MyArtifactory
+          inputResources:
+            - name: MyGitHubRepo
+
+      - name: docker_push
+        type: DockerPush
+        configuration:
+          affinityGroup: python_group
+          targetRepository: local-hello
+          integrations:
+            - name: MyArtifactory                       
+          inputSteps:
+            - name: docker_build
+          outputResources:
+            - name: python_image
+
+      - name: publish_python_build
+        type: PublishBuildInfo
+        configuration:
+          inputSteps:
+            - name: docker_push
+          outputResources:
+            - name: python_buildinfo
+
+      - name: xrayScanStep
+        type: XrayScan
+        configuration:
+          inputResources:
+            - name: python_buildinfo
