@@ -9,7 +9,7 @@ resources:
       buildOn:
          commit: true
   
-  - name: hello_image
+  - name: python_image
     type: Image
     configuration:
       registry: MyArtifactory
